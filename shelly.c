@@ -1,5 +1,6 @@
 #include "shelly.h"
 #include <stdlib.h>
+#include <string.h>
 
 const char *SHELLY_VERSION = "0.1.0";
 const char *SHELLY_AUTHOR = "Max Aitken";
@@ -30,9 +31,9 @@ void shellyPrintPrompt(void) {
 
   getcwd(cwd, sizeof(cwd));
   if (strncmp(cwd, home, strlen(home)) == 0) {
-    printf(GREEN "shelly:" CYAN "~%s" RESET_COLOUR " >", cwd + strlen(home));
+    printf(GREEN "shelly: " CYAN "~%s" RESET_COLOUR " >", cwd + strlen(home));
   } else {
-    printf(GREEN "shelly:" CYAN " %s" RESET_COLOUR " >", cwd);
+    printf(GREEN "shelly: " CYAN " %s" RESET_COLOUR " >", cwd);
   }
 }
 
@@ -71,12 +72,40 @@ char *shellyReadLine(void) {
 }
 
 /*** parse line ***/
-// char **shellyPaseeLine(char *line) {
-//   return line;
-// }
+// TODO: implement proper lexing and parsing to handle quotes, escapes, etc.
+char **shellyParseLine(char *line) {
+  int bufsize = SHELLY_TOKEN_BUFSIZE;
+  int position = 0;
+  char **tokens = malloc(sizeof(char) * bufsize);
+  char *token;
 
+  if (!tokens) {
+    fprintf(stderr, "shelly: memory allocation error\n");
+    exit(EXIT_FAILURE);
+  }
 
-void shellyLoop(void){
+  token = strtok(line, SHELLY_TOKEN_DELIMS);
+  while (token != NULL) {
+    tokens[position] = token;
+    position++;
+
+    if (position >= bufsize) {
+      bufsize += SHELLY_TOKEN_BUFSIZE;
+      tokens = realloc(tokens, bufsize);
+      if (!tokens) {
+        fprintf(stderr, "shelly: memory allocation error\n");
+        exit(EXIT_FAILURE);
+      }
+    }
+    token = strtok(NULL, SHELLY_TOKEN_DELIMS);
+  }
+  tokens[position] = NULL;
+  return tokens;
+}
+
+/*** execute command ***/
+
+void shellyLoop(void) {
   char *line;
   char **arguments;
   int status;
@@ -85,7 +114,7 @@ void shellyLoop(void){
     line = shellyReadLine();
     // arguments = shellyParseLine(line);
     // status = shellyExecute(arguements);
-  } while(1);
+  } while (1);
 }
 
 int main(int argc, char **argv) {
@@ -93,16 +122,15 @@ int main(int argc, char **argv) {
   // - Some ASCI art to make it look pretty
   // Enter into the REPL loop
   shellyInit();
-
   shellyLoop();
 
-  (void)argc;
-  int status;
-
-  if (fork() == 0)
-    execvp(argv[1], &argv[1]);
-
-  wait(&status);
+  // (void)argc;
+  // int status;
+  //
+  // if (fork() == 0)
+  //   execvp(argv[1], &argv[1]);
+  //
+  // wait(&status);
 
   return EXIT_SUCCESS;
 }

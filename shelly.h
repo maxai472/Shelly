@@ -2,6 +2,8 @@
 #define SHELLY_H
 
 #define SHELLY_RL_BUFSIZE 1024
+#define SHELLY_TOKEN_BUFSIZE 64
+#define SHELLY_TOKEN_DELIMS " \t\r\n\a"
 
 #include <stdio.h>
 #include <stdlib.h>
