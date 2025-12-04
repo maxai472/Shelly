@@ -17,6 +17,55 @@ const char *SHELLY_BANNER =
     "                                                            ░░██████  \n"
     "                                                             ░░░░░░   \n";
 /*** built-in commands ***/
+int shellyCd(char **arguments);
+int shellyHelp(char **arguments);
+int shellyExit(char **arguments);
+
+char *builtinCommands[] = {
+  "cd",
+  "help",
+  "exit"
+};
+
+int (*builtinFunctions[]) (char**) = {
+  &shellyCd,
+  &shellyHelp,
+  &shellyExit
+};
+
+int shellyNumBuiltinCommands() {
+  return sizeof(builtinCommands) / sizeof(char *);
+}
+
+int shellyCd(char **arguments) {
+  if (arguments[1] == NULL) {
+    fprintf(stderr, "shelly: expected argument to \"cd\"\n");
+  } else {
+    if (chdir(arguments[1]) != 0 ){
+      perror("shelly");
+    }
+  }
+  return 1;
+}
+
+int shellyHelp(char **arguments) {
+  if (arguments[1] != NULL) {
+    fprintf(stderr, "shelly: help does not take any agruments");
+  } else { 
+    printf(BLUE"Welcome to shelly!\n" RESET_COLOUR "It's a simple shell program written in C.\n");
+    printf("Currently the parser is very basic and will not handle quotes of escape characters.\n");
+    printf("You can run any program that is present in you system PATH\n");
+    printf("Here are some of the built in comands:\n");
+    for (int i = 0; i < shellyNumBuiltinCommands(); i++) {
+      printf(" - \"" MAGENTA "%s" RESET_COLOUR "\"\n", builtinCommands[i]);
+    }
+  }
+  return 1;
+}
+
+int shellyExit(char **arguments) {
+  return 0;
+}
 
 /*** Initialisation functions ***/
 void shellyInit() {
@@ -127,6 +176,18 @@ int shellyLaunchApplication(char **arguments) {
   return 1;
 }
 
+int shellyExecuteCommand(char **arguments) {
+  if (arguments[0] == NULL) {
+    return 1;
+  }
+
+  for (int i = 0; i < shellyNumBuiltinCommands(); i++) {
+    if (strcmp(arguments[0], builtinCommands[i]) == 0) {
+      return builtinFunctions[i](arguments);
+    }
+  }
+  return shellyLaunchApplication(arguments);
+}
 
 
 /*** REPL loop ***/
@@ -138,7 +199,7 @@ void shellyLoop(void) {
   do {
     line = shellyReadLine();
     arguments = shellyParseLine(line);
-    status = shellyLaunchApplication(arguments);
+    status = shellyExecuteCommand(arguments);
   } while (status);
 }
 
