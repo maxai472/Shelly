@@ -1,17 +1,21 @@
 #ifndef SHELLY_H
 #define SHELLY_H
 
+/*** includes ***/
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <string.h>
+#include <sys/wait.h>
+#include <sys/types.h>
+
+/*** definitions ***/
 #define SHELLY_RL_BUFSIZE 1024
 #define SHELLY_TOKEN_BUFSIZE 64
 #define SHELLY_TOKEN_DELIMS " \t\r\n\a"
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <sys/wait.h>
-#include <string.h>
-
-/*** termianl escape sequences for changing colours ***/
+/*** macros ***/
+/*** terminal escape sequences for changing colours ***/
 #define RESET_COLOUR       "\x1b[0m"
 
 #define BLACK       "\x1b[30m"

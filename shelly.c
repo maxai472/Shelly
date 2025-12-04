@@ -16,6 +16,8 @@ const char *SHELLY_BANNER =
     "                                                             ███ ░███ \n"
     "                                                            ░░██████  \n"
     "                                                             ░░░░░░   \n";
+/*** built-in commands ***/
+
 /*** Initialisation functions ***/
 void shellyInit() {
   printf("Welcome to...\n");
@@ -104,7 +106,30 @@ char **shellyParseLine(char *line) {
 }
 
 /*** execute command ***/
+int shellyLaunchApplication(char **arguments) {
+  pid_t pid, wpid;
+  int status;
 
+  if ((pid = fork()) == 0){
+    // child runs here
+    if (execvp(arguments[0], arguments) == -1) {
+      perror("shelly");
+    }
+  } else if (pid < 0) {
+    // error when forking
+    perror("shelly");
+  } else {
+    // parent runs here
+    do {
+      wpid = waitpid(pid, &status, WUNTRACED);
+    } while (!WIFEXITED(status) && !WIFSIGNALED(status));
+  }
+  return 1;
+}
+
+
+
+/*** REPL loop ***/
 void shellyLoop(void) {
   char *line;
   char **arguments;
@@ -112,9 +137,9 @@ void shellyLoop(void) {
 
   do {
     line = shellyReadLine();
-    // arguments = shellyParseLine(line);
-    // status = shellyExecute(arguements);
-  } while (1);
+    arguments = shellyParseLine(line);
+    status = shellyLaunchApplication(arguments);
+  } while (status);
 }
 
 int main(int argc, char **argv) {
